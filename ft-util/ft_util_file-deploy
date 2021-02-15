@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# file-deploy Script v1.1 Guilaume Hullin
+# OPTION NO-BACKUP can be specified to avoid creating a backup
+
+source "$(dirname "$0")/ft-util_inc_var"
+
+if [ -z "$1" ] || [ -z "$2" ]
+then
+    $S_LOG -s err -d $S_NAME "Needed variable SOURCE and TARGET are missing. Cannot do file deploy! SOURCE=$1 TARGET=$2 OPTION=$3"
+    exit 1
+else
+    SOURCE=$1
+    TARGET=$2
+    OPTION=$3
+fi
+
+#############################
+## BACKUP FILES
+#############################
+
+backup () {    
+    cp "$1" "$1.$(date +\%Y\%m\%d\-\%H\%M\%S).bak"
+    $S_LOG -s debug -d $S_NAME -d "$1" "backup of $1"   
+}
+
+if [ -d "$TARGET" ]
+then
+    for file in ${TARGET%/}/*; do
+        [ -f "$file" ] || break
+        [ "${file##*.}" != "bak" ] || continue # only process files with the same ext than the source    
+        [[ $OPTION == *"NO-BACKUP"* ]] || backup $file
+    done
+elif [ -f "$TARGET" ] 
+then
+    [[ $OPTION == *"NO-BACKUP"* ]] || backup $TARGET
+fi
+
+
+#############################
+## DEPLOY FILES
+#############################
+
+returncode=255 
+
+if [ -d "${TARGET}" ]
+then
+    ### https://catonmat.net/bash-one-liners-explained-part-three (22. Send stdout to one process and stderr to another process)
+    ### https://stackoverflow.com/questions/51410472/bash-wait-for-process-substitution-subshell-to-finish/51410920#51410920
+    coproc read
+    rsync -i -ac "${SOURCE%/}/" "${TARGET%/}" 2> >($S_LOG -s err -d $S_NAME -d "$SOURCE" -i) > >($S_LOG -d $S_NAME -d "$SOURCE" -i)
+    returncode=$? # store the exit code of the command
+    exec {COPROC[1]}>&- 
+    read -u ${COPROC[0]} 
+    ### command 2> >(stderr_cmd) > >(stdout_cmd)
+    ### The lines around are for waiting subprocess to finish and gather the return code from command
+    
+else
+    [ -d "$(dirname "$TARGET")" ] || mkdir -p "$(dirname "$TARGET")"
+    cp -p "$SOURCE" "$TARGET" 2> >($S_LOG -s err -d $S_NAME -d "$SOURCE" -i) > >($S_LOG -d $S_NAME -d "$SOURCE" -i)
+    returncode=$? # store the exit code of the command
+
+fi
+$S_LOG -s $returncode -d $S_NAME -d "$SOURCE" "transfer exited with code $returncode"
+
+
+#############################
+#############################
+## CLEANUP BIN BAK FILES
+#############################
+#############################
+
+if [ -d "${TARGET}" ]
+then
+    $S_DIR_PATH/ft_util_bak-cleaner ${TARGET%/}/
+elif [ -f "${TARGET}" ] 
+then
+    $S_DIR_PATH/ft_util_bak-cleaner ${TARGET}
+fi
