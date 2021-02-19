@@ -34,7 +34,7 @@ $S_LOG -d $S_NAME "Start $S_NAME $*"
 #############################
 
 $S_LOG -d $S_NAME "Removing zabbix-agent"
-apt-get remove --purge zabbix-agent -y &>/dev/null
+apt-get remove --yes --purge zabbix-agent -y &>/dev/null
 dpkg -r zabbix-release &>/dev/null
 
 #############################
@@ -60,8 +60,13 @@ case $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) in
 esac
 
 cd $SRC_DIR
-wget --quiet ${PKG_ZBX_URL}/${PKG_ZBX_NAME}
-$S_LOG -s $? -d $S_NAME "Download of ${PKG_ZBX_URL}/${PKG_ZBX_NAME} returned code $?"
+if [ -e ${PKG_ZBX_NAME} ]
+then
+    $S_LOG -s $? -d $S_NAME "Package ${PKG_ZBX_NAME} found in $SRC_DIR"
+else
+    wget --quiet ${PKG_ZBX_URL}/${PKG_ZBX_NAME}
+    $S_LOG -s $? -d $S_NAME "Download of ${PKG_ZBX_URL}/${PKG_ZBX_NAME} returned code $?"
+fi
 
 
 #############################
@@ -76,7 +81,7 @@ $S_LOG -s $? -d $S_NAME "DPKG of ${PKG_ZBX_URL}/${PKG_ZBX_NAME} returned code $?
 apt update &>/dev/null
 $S_LOG -s $? -d $S_NAME "APT UPDATE returned code $?"
 
-apt install zabbix-agent &>/dev/null
+apt --yes install zabbix-agent &>/dev/null
 $S_LOG -s $? -d $S_NAME "APT INSTALL of zabbix-agent returned code $?"
 
 
