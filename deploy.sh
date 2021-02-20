@@ -83,10 +83,10 @@ fi
 dpkg -i ${PKG_ZBX_NAME} &>/dev/null
 $S_LOG -s $? -d $S_NAME "DPKG of ${PKG_ZBX_NAME} returned code $?"
 
-apt update &>/dev/null
+apt-get update &>/dev/null
 $S_LOG -s $? -d $S_NAME "APT UPDATE returned code $?"
 
-apt --yes install zabbix-agent &>/dev/null
+apt-get --yes install zabbix-agent &>/dev/null
 $S_LOG -s $? -d $S_NAME "APT INSTALL of zabbix-agent returned code $?"
 
 
