@@ -44,6 +44,11 @@ dpkg -r zabbix-release &>/dev/null
 #############################
 
 case $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) in
+    7)
+        PKG_REPO_URL="repo.zabbix.com/zabbix/3.0/debian" # Overide for Debian 7
+        PKG_ZBX_URL="https://${PKG_REPO_URL}/pool/main/z/zabbix-release"
+        PKG_ZBX_NAME="zabbix-release_3.0-2+wheezy_all.deb"
+        ;;
     8)  
         PKG_ZBX_NAME="${PKG_ZBX_NAME}+jessie_all.deb"
         ;;
