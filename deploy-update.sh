@@ -31,7 +31,7 @@ then
     usage
 fi
 
-source "$(dirname "$0")/ft-util/ft-util_inc_var"
+source "$(dirname "$0")/ft-util/ft_util_inc_var"
 
 $S_LOG -d $S_NAME "Start $S_NAME $*"
 
