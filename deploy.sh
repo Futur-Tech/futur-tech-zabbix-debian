@@ -121,14 +121,9 @@ $S_LOG -d $S_NAME "=============================================================
 #############################
 
 systemctl enable zabbix-agent &>/dev/null
-$S_LOG -s $? -d $S_NAME "systemctl enable zabbix-agent returned code $?"
+$S_LOG -s $? -d $S_NAME "systemctl enable zabbix-agent returned code $?" # for Debian 7 it will not work but the agent seems to install itself in /etc/rc2.d/
 
-systemctl restart zabbix-agent &>/dev/null
-$S_LOG -s $? -d $S_NAME "systemctl restart zabbix-agent returned code $?"
-
-
+service zabbix-agent restart &>/dev/null
+$S_LOG -s $? -d $S_NAME "service zabbix-agent restart returned code $?"
 
 $S_LOG -d "$S_NAME" "End $S_NAME"
-
-# systemctl status zabbix-agent
-
