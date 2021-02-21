@@ -21,7 +21,7 @@ then
     ZBX_SRV_PASSIVE=$1
     ZBX_SRV_ACTIVE=$2
 else
-    $S_LOG -s crit -d $S_NAME "You need to give \"zabbix_passive_server_name,zabbix_passive_server_ip\" \"zabbix_active_server_name\" "
+    $S_LOG -d $S_NAME "You need to give \"zabbix_passive_server_name,zabbix_passive_server_ip\" \"zabbix_active_server_name\" "
     exit 1
 fi
 
