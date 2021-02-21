@@ -2,7 +2,7 @@
 
 # Deploy script Zabbix Agent for Debian v1.0
 
-source "$(dirname "$0")/ft-util/ft-util_inc_var"
+source "$(dirname "$0")/ft-util/ft_util_inc_var"
 
 SRC_DIR="/usr/local/src"
 PKG_REPO_URL="repo.zabbix.com/zabbix/5.0/debian"
