@@ -34,8 +34,8 @@ $S_LOG -d $S_NAME "Start $S_NAME $*"
 #############################
 
 $S_LOG -d $S_NAME "Removing zabbix-agent"
-apt-get remove --yes --purge zabbix-agent -y &>/dev/null
-dpkg -r zabbix-release &>/dev/null
+apt-get remove --yes --purge zabbix-agent -y
+dpkg -r zabbix-release
 
 #############################
 #############################
