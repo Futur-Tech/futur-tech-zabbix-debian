@@ -132,9 +132,6 @@ $S_LOG -d $S_NAME "=============================================================
 sed -i -r "s/^(Hostname=Zabbix server)/Hostname=$(hostname -f)/g" $ZBX_CONF
 $S_LOG -s $? -d $S_NAME "Edited: $(egrep ^Hostname= $ZBX_CONF)"
 
-sed -i -r 's/^(\# HostMetadataItem=)/HostMetadataItem=system.uname/g' $ZBX_CONF
-$S_LOG -s $? -d $S_NAME "Edited: $(egrep ^HostMetadataItem= $ZBX_CONF)"
-
 sed -i -r "s/^(Server=127\.0\.0\.1)/Server=$ZBX_SRV_PASSIVE/g" $ZBX_CONF
 $S_LOG -s $? -d $S_NAME "Edited: $(egrep ^Server= $ZBX_CONF)"
 
