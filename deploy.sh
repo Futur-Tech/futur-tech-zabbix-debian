@@ -105,7 +105,7 @@ $S_LOG -s $? -d $S_NAME "Edited: $(egrep ^Server= $ZBX_CONF)"
 sed -i -r "s/^(ServerActive=127\.0\.0\.1)/ServerActive=$ZBX_SRV_ACTIVE/g" $ZBX_CONF
 $S_LOG -s $? -d $S_NAME "Edited: $(egrep ^ServerActive= $ZBX_CONF)"
 
-sed -i -r "s/^Include=\/etc\/zabbix\/zabbix_agentd.d\/$/Include=\/etc\/zabbix\/zabbix_agentd.d\/*.conf/g" $ZBX_CONF
+sed -i -r "s/^Include=\/etc\/zabbix\/zabbix_agentd.d\/$/Include=\/etc\/zabbix\/zabbix_agentd.conf.d\/*.conf/g" $ZBX_CONF
 $S_LOG -s $? -d $S_NAME "Edited for old Zabbix version: $(egrep ^Include= $ZBX_CONF)"
 
 #############################
