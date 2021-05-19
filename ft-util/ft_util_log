@@ -84,11 +84,11 @@ echo_log () {
             crit) color="\e[41m" ;;
             err) color="\e[31m" ;;
             warn) color="\e[33m" ;;
-            info) color="\e[42;5m" ;;
+            info) color="\e[37m" ;;
             debug) color="\e[92m" ;;
         esac
 
-        echo -e "${color}$(date +\%Y-\%m-\%d\ \%H:\%M:\%S) || ${s} |${data}|\e[0m ${log_msg}" | tee -a ${pathArray[@]}
+        echo -e "${color}$(date +\%Y-\%m-\%d\ \%H:\%M:\%S) || \e[1m${s}\e[21m |${data}|\e[0m ${log_msg}" | tee -a ${pathArray[@]}
     fi
 }
 
