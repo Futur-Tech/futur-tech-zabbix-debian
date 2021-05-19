@@ -88,7 +88,7 @@ else
 
     $S_DIR_PATH/ft-util/ft_util_pkg -i "zabbix-agent" || exit 1
 
-}
+fi
 
 #############################
 ## DEPLOY CONFIG FILE      ## 
