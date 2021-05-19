@@ -88,7 +88,7 @@ echo_log () {
             debug) color="\e[92m" ;;
         esac
 
-        echo -e "${color}$(date +\%Y-\%m-\%d\ \%H:\%M:\%S) || \e[1m${s}\e[21m |${data}|\e[0m ${log_msg}" | tee -a ${pathArray[@]}
+        echo -e "${color}$(date +\%Y-\%m-\%d\ \%H:\%M:\%S) || \e[7m${s}\e[27m |${data}|\e[0m ${log_msg}" | tee -a ${pathArray[@]}
     fi
 }
 
