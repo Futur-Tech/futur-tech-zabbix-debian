@@ -93,7 +93,7 @@ else
     ZBX_SRV_PASSIVE="${Server}"
     ZBX_SRV_ACTIVE="${ServerActive}"
     
-    $S_LOG -d $S_NAME "ZBX_SRV_PASSIVE="${ZBX_SRV_PASSIVE}""
+    $S_LOG -d $S_NAME "ZBX_SRV_PASSIVE=\"${ZBX_SRV_PASSIVE}\""
     $S_LOG -d $S_NAME "ZBX_SRV_ACTIVE=\"${ZBX_SRV_ACTIVE}\""
     
 fi
