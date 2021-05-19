@@ -82,7 +82,7 @@ echo_log () {
 
 if [ -z ${s} ]
 then 
-    s="info"
+    s="\e[34minfo"
 fi
 
 if [[ ${#pathArray[@]} = 0 ]]
