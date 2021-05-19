@@ -21,70 +21,80 @@ then
     ZBX_SRV_PASSIVE=$1
     ZBX_SRV_ACTIVE=$2
 else
-    $S_LOG -d $S_NAME "You need to give \"zabbix_passive_server_name,zabbix_passive_server_ip\" \"zabbix_active_server_name\" "
+    $S_LOG -d $S_NAME "You need to give \"zabbix_passive_server\" \"zabbix_active_server\" "
     exit 1
 fi
 
 $S_LOG -d $S_NAME "Start $S_NAME $*"
 
-#############################
-## GET CORRECT PACKAGE     ##
-#############################
-
-case $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) in
-    7)
-        PKG_REPO_URL="repo.zabbix.com/zabbix/3.0/debian" # Overide for Debian 7
-        PKG_ZBX_URL="http://${PKG_REPO_URL}/pool/main/z/zabbix-release"
-        PKG_ZBX_NAME="zabbix-release_3.0-2+wheezy_all.deb"
-        ;;
-    8)  
-        PKG_ZBX_NAME="${PKG_ZBX_NAME}+jessie_all.deb"
-        ;;
-    9)  
-        PKG_ZBX_NAME="${PKG_ZBX_NAME}+stretch_all.deb"
-        ;;
-    10) 
-        PKG_ZBX_NAME="${PKG_ZBX_NAME}+buster_all.deb"
-        ;;
-    *) 
-        $S_LOG -s warn -d $S_NAME "Version of Debian not supported by the script."
-        exit 1 
-        ;;
-esac
-
-cd $SRC_DIR
-if [ -e ${PKG_ZBX_NAME} ]
+if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent"
 then
-    $S_LOG -s $? -d $S_NAME "Package ${PKG_ZBX_NAME} found in $SRC_DIR"
+    $S_LOG -d $S_NAME "Zabbix Agent is already installed"
+
 else
-    wget --quiet ${PKG_ZBX_URL}/${PKG_ZBX_NAME}
-    $S_LOG -s $? -d $S_NAME "Download of ${PKG_ZBX_URL}/${PKG_ZBX_NAME} returned code $?"
-fi
 
-#############################
-## REMOVE ZABBIX           ##
-#############################
+    #############################
+    ## GET CORRECT PACKAGE     ##
+    #############################
 
-$S_LOG -d $S_NAME "Removing zabbix-agent"
+    case $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) in
+        7)
+            PKG_REPO_URL="repo.zabbix.com/zabbix/3.0/debian" # Overide for Debian 7
+            PKG_ZBX_URL="http://${PKG_REPO_URL}/pool/main/z/zabbix-release"
+            PKG_ZBX_NAME="zabbix-release_3.0-2+wheezy_all.deb"
+            ;;
+        8)  
+            PKG_ZBX_NAME="${PKG_ZBX_NAME}+jessie_all.deb"
+            ;;
+        9)  
+            PKG_ZBX_NAME="${PKG_ZBX_NAME}+stretch_all.deb"
+            ;;
+        10) 
+            PKG_ZBX_NAME="${PKG_ZBX_NAME}+buster_all.deb"
+            ;;
+        *) 
+            $S_LOG -s warn -d $S_NAME "Version of Debian not supported by the script."
+            exit 1 
+            ;;
+    esac
 
-DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent < /dev/null > /dev/null
-$S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent"
+    cd $SRC_DIR
+    if [ -e ${PKG_ZBX_NAME} ]
+    then
+        $S_LOG -s $? -d $S_NAME "Package ${PKG_ZBX_NAME} found in $SRC_DIR"
+    else
+        wget --quiet ${PKG_ZBX_URL}/${PKG_ZBX_NAME}
+        $S_LOG -s $? -d $S_NAME "Download of ${PKG_ZBX_URL}/${PKG_ZBX_NAME} returned code $?"
+    fi
 
-dpkg -r zabbix-release > /dev/null
-$S_LOG -s $? -d $S_NAME "dpkg -r zabbix-release"
+    #############################
+    ## REMOVE ZABBIX           ##
+    #############################
 
-#############################
-## INSTALL PACKAGES        ##
-#############################
+    $S_LOG -d $S_NAME "Removing zabbix-agent"
 
-dpkg -i ${PKG_ZBX_NAME} > /dev/null
-$S_LOG -s $? -d $S_NAME "DPKG of ${PKG_ZBX_NAME} returned code $?"
+    DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent < /dev/null > /dev/null
+    $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent"
 
-$S_DIR_PATH/ft-util/ft_util_pkg -i "zabbix-agent" || exit 1
+    dpkg -r zabbix-release > /dev/null
+    $S_LOG -s $? -d $S_NAME "dpkg -r zabbix-release"
+
+    #############################
+    ## INSTALL PACKAGES        ##
+    #############################
+
+    dpkg -i ${PKG_ZBX_NAME} > /dev/null
+    $S_LOG -s $? -d $S_NAME "DPKG of ${PKG_ZBX_NAME} returned code $?"
+
+    $S_DIR_PATH/ft-util/ft_util_pkg -i "zabbix-agent" || exit 1
+
+}
 
 #############################
 ## DEPLOY CONFIG FILE      ## 
 #############################
+
+$S_LOG -d $S_NAME "Zabbix Agent configuration"
 
 [ ! -e "${ZBX_CONF}.origin" ] && cp "${ZBX_CONF}" "${ZBX_CONF}.origin"
 
