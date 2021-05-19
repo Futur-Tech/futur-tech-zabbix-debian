@@ -15,12 +15,6 @@ ZBX_CONF_D="${ETC_ZBX}/zabbix_agentd.conf.d"
 LOG_DEBUG=true
 
 $S_LOG -d $S_NAME "Start $S_NAME $*"
-$S_LOG -s debug -d $S_NAME "Start $S_NAME $*"
-$S_LOG -s info -d $S_NAME "Start $S_NAME $*"
-$S_LOG -s warn -d $S_NAME "Start $S_NAME $*"
-$S_LOG -s err -d $S_NAME "Start $S_NAME $*"
-$S_LOG -s crit -d $S_NAME "Start $S_NAME $*"
-$S_LOG -s alert -d $S_NAME "Start $S_NAME $*"
 
 if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent"
 then
