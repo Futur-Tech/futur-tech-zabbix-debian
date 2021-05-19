@@ -76,7 +76,6 @@ shift "$((OPTIND - 1))"
 echo_log () { 
     if [ -n "${log_msg}" ]
     then
-        
         # Let's put some color
         # https://misc.flogisoft.com/bash/tip_colors_and_formatting
         case ${s} in
