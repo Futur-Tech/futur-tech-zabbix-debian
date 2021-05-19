@@ -79,17 +79,16 @@ echo_log () {
         
         # Let's put some color
         # https://misc.flogisoft.com/bash/tip_colors_and_formatting
-        case ${OPTARG} in
+        case ${s} in
             alert) color="\e[5m\e[41m" ;;
             crit) color="\e[41m" ;;
             err) color="\e[31m" ;;
             warn) color="\e[33m" ;;
             info) color="\e[5m\e[37m" ;;
             debug) color="\e[92m" ;;
-
         esac
 
-        echo -e "$(date +\%Y-\%m-\%d\ \%H:\%M:\%S) || \e[1m${s}\e[21m |${data}|\e[0m ${log_msg}" | tee -a ${pathArray[@]}
+        echo -e "${color}$(date +\%Y-\%m-\%d\ \%H:\%M:\%S) || ${s} |${data}|\e[0m ${log_msg}" | tee -a ${pathArray[@]}
     fi
 }
 
