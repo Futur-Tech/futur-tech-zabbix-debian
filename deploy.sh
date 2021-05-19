@@ -89,6 +89,13 @@ then
     ZBX_SRV_ACTIVE=$2
 else
     source <(grep "Server" ${ZBX_CONF})
+    $S_LOG -s $? -d $S_NAME "Loaded ZBX_SRV_PASSIVE and ZBX_SRV_ACTIVE variable from ${ZBX_CONF}"
+    ZBX_SRV_PASSIVE="${Server}"
+    ZBX_SRV_ACTIVE="${ServerActive}"
+    
+    $S_LOG -d $S_NAME "ZBX_SRV_PASSIVE="${ZBX_SRV_PASSIVE}""
+    $S_LOG -d $S_NAME "ZBX_SRV_ACTIVE=\"${ZBX_SRV_ACTIVE}\""
+    
 fi
 
 [ ! -e "${ZBX_CONF}.origin" ] && cp "${ZBX_CONF}" "${ZBX_CONF}.origin"
