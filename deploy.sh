@@ -94,7 +94,7 @@ else
 fi
 
 [ ! -e "${ZBX_CONF}.origin" ] && cp "${ZBX_CONF}" "${ZBX_CONF}.origin"
-mkdir -p ${ZBX_CONF_D}
+mkdir -pv ${ZBX_CONF_D} | $S_LOG -d "$S_NAME" -d "$ZBX_CONF_D" -i
 
 echo "Hostname=$(hostname -f)
 Server=${ZBX_SRV_PASSIVE}
