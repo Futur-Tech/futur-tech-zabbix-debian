@@ -84,7 +84,7 @@ echo_log () {
             crit) color="\e[41m" ;;
             err) color="\e[91m" ;;
             warn) color="\e[33m" ;;
-            info) color="\e[94m" ;;
+            info) color="\e[34m" ;;
             debug) color="\e[92m" ;;
         esac
 
