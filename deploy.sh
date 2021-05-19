@@ -88,13 +88,13 @@ $S_DIR_PATH/ft-util/ft_util_pkg -i "zabbix-agent" || exit 1
 
 [ ! -e "${ZBX_CONF}.origin" ] && cp "${ZBX_CONF}" "${ZBX_CONF}.origin"
 
-$S_DIR_PATH/ft-util/ft_util_conf-update -s "$S_DIR_PATH/zabbix_agentd.conf" -d "${ZBX_CONF}"
-cat $ZBX_CONF | $S_LOG -d "$S_NAME" -d "$ZBX_CONF" -i 
-
 echo "Hostname=$(hostname -f)
 Server=${ZBX_SRV_PASSIVE}
-ServerActive=${ZBX_SRV_ACTIVE}" >> "${ZBX_CONF_D}/ft-zabbix-debian.conf"
-cat "${ZBX_CONF_D}/ft-zabbix-debian.conf" | $S_LOG -d "$S_NAME" -d "${ZBX_CONF_D}/ft-zabbix-debian.conf" -i 
+ServerActive=${ZBX_SRV_ACTIVE}
+PidFile=/var/run/zabbix/zabbix_agentd.pid
+LogFile=/var/log/zabbix/zabbix_agentd.log
+Include=${ZBX_CONF_D}/*.conf" > ${ZBX_CONF}
+cat $ZBX_CONF | $S_LOG -d "$S_NAME" -d "$ZBX_CONF" -i 
 
 #############################
 ## ENABLE ZABBIX SERVICE   ##
