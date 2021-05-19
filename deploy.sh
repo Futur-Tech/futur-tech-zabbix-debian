@@ -23,7 +23,6 @@ else
     #############################
     ## GET CORRECT PACKAGE     ##
     #############################
-
     case $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) in
         7)
             PKG_REPO_URL="repo.zabbix.com/zabbix/3.0/debian" # Overide for Debian 7
@@ -57,7 +56,6 @@ else
     #############################
     ## REMOVE ZABBIX           ##
     #############################
-
     $S_LOG -d $S_NAME "Removing zabbix-agent"
 
     DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent < /dev/null > /dev/null
@@ -80,7 +78,6 @@ fi
 #############################
 ## DEPLOY CONFIG FILE      ## 
 #############################
-
 $S_LOG -d $S_NAME "Zabbix Agent configuration"
 
 if [ -n "$1" ] && [ -n "$2" ]
@@ -92,13 +89,12 @@ else
     $S_LOG -s $? -d $S_NAME "Loaded ZBX_SRV_PASSIVE and ZBX_SRV_ACTIVE variable from ${ZBX_CONF}"
     ZBX_SRV_PASSIVE="${Server}"
     ZBX_SRV_ACTIVE="${ServerActive}"
-    
     $S_LOG -d $S_NAME "ZBX_SRV_PASSIVE=\"${ZBX_SRV_PASSIVE}\""
     $S_LOG -d $S_NAME "ZBX_SRV_ACTIVE=\"${ZBX_SRV_ACTIVE}\""
-    
 fi
 
 [ ! -e "${ZBX_CONF}.origin" ] && cp "${ZBX_CONF}" "${ZBX_CONF}.origin"
+mkdir -p ${ZBX_CONF_D}
 
 echo "Hostname=$(hostname -f)
 Server=${ZBX_SRV_PASSIVE}
@@ -111,11 +107,13 @@ cat $ZBX_CONF | $S_LOG -d "$S_NAME" -d "$ZBX_CONF" -i
 #############################
 ## ENABLE ZABBIX SERVICE   ##
 #############################
-
 systemctl enable zabbix-agent &>/dev/null
 $S_LOG -s $? -d $S_NAME "systemctl enable zabbix-agent returned code $?" # for Debian 7 it will not work but the agent seems to install itself in /etc/rc2.d/
 
-service zabbix-agent restart &>/dev/null
-$S_LOG -s $? -d $S_NAME "service zabbix-agent restart returned code $?"
+#############################
+## RESTART ZABBIX SERVICE  ##
+#############################
+echo "service zabbix-agent restart" | at now + 1 min &>/dev/null ## restart zabbix agent with a delay
+$S_LOG -s $? -d "$S_NAME" "Scheduling Zabbix Agent Restart"
 
 $S_LOG -d "$S_NAME" "End $S_NAME"
