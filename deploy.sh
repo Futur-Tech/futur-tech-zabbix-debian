@@ -8,12 +8,12 @@ SRC_DIR="/usr/local/src"
 PKG_REPO_URL="repo.zabbix.com/zabbix/5.0/debian"
 PKG_ZBX_URL="https://${PKG_REPO_URL}/pool/main/z/zabbix-release"
 PKG_ZBX_NAME="zabbix-release_5.0-1"
-ZBX_CONF="/etc/zabbix/zabbix_agentd.conf"
+ETC_ZBX="/etc/zabbix"
+ZBX_CONF="${ETC_ZBX}/zabbix_agentd.conf"
+ZBX_CONF_D="${ETC_ZBX}/zabbix_agentd.conf.d"
 
 #############################
-#############################
-## LOAD PARAMETERS
-#############################
+## LOAD PARAMETERS         ##
 #############################
 
 if [ -n "$1" ] && [ -n "$2" ]
@@ -28,23 +28,7 @@ fi
 $S_LOG -d $S_NAME "Start $S_NAME $*"
 
 #############################
-#############################
-## REMOVE ZABBIX
-#############################
-#############################
-
-$S_LOG -d $S_NAME "Removing zabbix-agent"
-
-DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent < /dev/null > /dev/null
-$S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent"
-
-dpkg -r zabbix-release > /dev/null
-$S_LOG -s $? -d $S_NAME "dpkg -r zabbix-release"
-
-#############################
-#############################
-## GET CORRECT PACKAGE
-#############################
+## GET CORRECT PACKAGE     ##
 #############################
 
 case $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) in
@@ -77,11 +61,20 @@ else
     $S_LOG -s $? -d $S_NAME "Download of ${PKG_ZBX_URL}/${PKG_ZBX_NAME} returned code $?"
 fi
 
+#############################
+## REMOVE ZABBIX           ##
+#############################
+
+$S_LOG -d $S_NAME "Removing zabbix-agent"
+
+DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent < /dev/null > /dev/null
+$S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent"
+
+dpkg -r zabbix-release > /dev/null
+$S_LOG -s $? -d $S_NAME "dpkg -r zabbix-release"
 
 #############################
-#############################
-## INSTALL PACKAGES
-#############################
+## INSTALL PACKAGES        ##
 #############################
 
 dpkg -i ${PKG_ZBX_NAME} > /dev/null
@@ -89,30 +82,22 @@ $S_LOG -s $? -d $S_NAME "DPKG of ${PKG_ZBX_NAME} returned code $?"
 
 $S_DIR_PATH/ft-util/ft_util_pkg -i "zabbix-agent" || exit 1
 
-
 #############################
-#############################
-## EDIT CONFIG FILE
-#############################
+## DEPLOY CONFIG FILE      ## 
 #############################
 
-sed -i -r "s/^(Hostname=Zabbix server)/Hostname=$(hostname -f)/g" $ZBX_CONF
-$S_LOG -s $? -d $S_NAME "Edited: $(egrep ^Hostname= $ZBX_CONF)"
+[ ! -e "${ZBX_CONF}.origin" ] && cp "${ZBX_CONF}" "${ZBX_CONF}.origin"
 
-sed -i -r "s/^(Server=127\.0\.0\.1)/Server=$ZBX_SRV_PASSIVE/g" $ZBX_CONF
-$S_LOG -s $? -d $S_NAME "Edited: $(egrep ^Server= $ZBX_CONF)"
+$S_DIR_PATH/ft-util/ft_util_conf-update -s "$S_DIR_PATH/zabbix_agentd.conf" -d "${ZBX_CONF}"
+cat $ZBX_CONF | $S_LOG -d "$S_NAME" -d "$ZBX_CONF" -i 
 
-sed -i -r "s/^(ServerActive=127\.0\.0\.1)/ServerActive=$ZBX_SRV_ACTIVE/g" $ZBX_CONF
-$S_LOG -s $? -d $S_NAME "Edited: $(egrep ^ServerActive= $ZBX_CONF)"
-
-sed -i -r "s/^Include=\/etc\/zabbix\/zabbix_agentd.d\/$/Include=\/etc\/zabbix\/zabbix_agentd.conf.d\/*.conf/g" $ZBX_CONF
-sed -i -r "s/^Include=\/etc\/zabbix\/zabbix_agentd.d\/\*.conf$/Include=\/etc\/zabbix\/zabbix_agentd.conf.d\/*.conf/g" $ZBX_CONF
-$S_LOG -s $? -d $S_NAME "Edited: $(egrep ^Include= $ZBX_CONF)"
+echo "Hostname=$(hostname -f)
+Server=${ZBX_SRV_PASSIVE}
+ServerActive=${ZBX_SRV_ACTIVE}" >> "${ZBX_CONF_D}/ft-zabbix-debian.conf"
+cat "${ZBX_CONF_D}/ft-zabbix-debian.conf" | $S_LOG -d "$S_NAME" -d "${ZBX_CONF_D}/ft-zabbix-debian.conf" -i 
 
 #############################
-#############################
-## ENABLE ZABBIX SERVICE
-#############################
+## ENABLE ZABBIX SERVICE   ##
 #############################
 
 systemctl enable zabbix-agent &>/dev/null

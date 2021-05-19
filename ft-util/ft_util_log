@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Logging Script v1.1 Guilaume Hullin
-# the $LOG_DEBUG should be declared in the script which use ft_util_log in order to log debug message
-# the $LOG_FILE can also contains several path separated with space
-
 declare -a arrayData
 declare -a pathArray
 

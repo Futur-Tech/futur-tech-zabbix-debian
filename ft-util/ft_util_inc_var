@@ -1,7 +1,3 @@
-# ft-util_inc_var v1.0 Guilaume Hullin
-
-#############################
-#############################
 S_PATH=$(readlink -f "$0")
 S_NAME=$(basename -- "$0")
 S_DIR=$(dirname $S_PATH)
@@ -33,5 +29,3 @@ if [ -z "$LOG_DEBUG" ]
 then 
     export LOG_DEBUG=false
 fi
-#############################
-#############################
