@@ -76,7 +76,7 @@ shift "$((OPTIND - 1))"
 echo_log () { 
     if [ -n "${log_msg}" ]
     then
-        echo "$(date +\%Y-\%m-\%d\ \%H:\%M:\%S) || ${s} |${data}| ${log_msg}" | tee -a ${pathArray[@]}
+        echo -e "$(date +\%Y-\%m-\%d\ \%H:\%M:\%S) || ${s} |${data}| ${log_msg}" | tee -a ${pathArray[@]}
     fi
 }
 
