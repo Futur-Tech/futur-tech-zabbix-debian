@@ -12,19 +12,6 @@ ETC_ZBX="/etc/zabbix"
 ZBX_CONF="${ETC_ZBX}/zabbix_agentd.conf"
 ZBX_CONF_D="${ETC_ZBX}/zabbix_agentd.conf.d"
 
-#############################
-## LOAD PARAMETERS         ##
-#############################
-
-if [ -n "$1" ] && [ -n "$2" ]
-then
-    ZBX_SRV_PASSIVE=$1
-    ZBX_SRV_ACTIVE=$2
-else
-    $S_LOG -d $S_NAME "You need to give \"zabbix_passive_server\" \"zabbix_active_server\" "
-    exit 1
-fi
-
 $S_LOG -d $S_NAME "Start $S_NAME $*"
 
 if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent"
@@ -95,6 +82,14 @@ fi
 #############################
 
 $S_LOG -d $S_NAME "Zabbix Agent configuration"
+
+if [ -n "$1" ] && [ -n "$2" ]
+then
+    ZBX_SRV_PASSIVE=$1
+    ZBX_SRV_ACTIVE=$2
+else
+    source <(grep "Server" ${ZBX_CONF})
+fi
 
 [ ! -e "${ZBX_CONF}.origin" ] && cp "${ZBX_CONF}" "${ZBX_CONF}.origin"
 
