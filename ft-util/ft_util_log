@@ -80,11 +80,11 @@ echo_log () {
         # Let's put some color
         # https://misc.flogisoft.com/bash/tip_colors_and_formatting
         case ${s} in
-            alert) color="\e[93;41m" ;;
+            alert) color="\e[103;31m" ;;
             crit) color="\e[41m" ;;
             err) color="\e[91m" ;;
             warn) color="\e[33m" ;;
-            info) color="\e[34m" ;;
+            info) color="\e[94m" ;;
             debug) color="\e[92m" ;;
         esac
 
