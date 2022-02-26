@@ -82,7 +82,7 @@ else
     dpkg -i ${PKG_ZBX_NAME} > /dev/null
     $S_LOG -s $? -d $S_NAME "DPKG of ${PKG_ZBX_NAME} returned code $?"
 
-    $S_DIR_PATH/ft-util/ft_util_pkg -i "zabbix-agent" || exit 1
+    $S_DIR_PATH/ft-util/ft_util_pkg -u -i "zabbix-agent" || exit 1
 
 fi
 
