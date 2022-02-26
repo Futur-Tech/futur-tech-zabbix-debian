@@ -25,6 +25,15 @@ else
     #############################
     ## GET CORRECT PACKAGE     ##
     #############################
+
+    # Overide for Raspberry Pi OS
+    if cat /etc/os-release | grep 'raspbian' > /dev/null
+    then
+        $S_LOG -d $S_NAME "Raspberry Pi OS Detected"
+        PKG_REPO_URL="repo.zabbix.com/zabbix/5.0/raspbian" 
+        PKG_ZBX_URL="http://${PKG_REPO_URL}/pool/main/z/zabbix-release"
+    fi
+
     case $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) in
         7)
             PKG_REPO_URL="repo.zabbix.com/zabbix/3.0/debian" # Overide for Debian 7
