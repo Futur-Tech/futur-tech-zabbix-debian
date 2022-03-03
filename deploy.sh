@@ -13,7 +13,7 @@ LOG_DEBUG=true
 
 $S_LOG -d $S_NAME "Start $S_NAME $*"
 
-if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2"
+if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent"
 then
     $S_LOG -s warn -d $S_NAME "Zabbix Agent is already installed and need to be replaced by Zabbix Agent2"
 
