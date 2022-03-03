@@ -20,14 +20,14 @@ then
     $S_LOG -s warn -d $S_NAME "Removing zabbix-agent"
 
     DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent < /dev/null > /dev/null
-    $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent"
+    $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent returned EXIT_CODE=$?"
 
     $S_DIR_PATH/ft-util/ft_util_pkg -u -i "zabbix-agent2" || exit 1
 fi
 
 if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2"
 then
-    $S_LOG -d $S_NAME "Zabbix Agent2 is already installed"
+    $S_LOG -d $S_NAME "Zabbix Agent 2 is already installed"
 
 else
 
@@ -69,9 +69,9 @@ else
     fi
 
     #############################
-    ## REMOVE ZABBIX AGENT2    ##
+    ## REMOVE ZABBIX AGENT 2   ##
     #############################
-    $S_LOG -d $S_NAME "Removing zabbix-agent2"
+    $S_LOG -d $S_NAME "Removing Zabbix Agent 2"
 
     DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent* < /dev/null > /dev/null
     $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent*"
@@ -93,7 +93,7 @@ fi
 #############################
 ## DEPLOY CONFIG FILE      ## 
 #############################
-$S_LOG -d $S_NAME "Zabbix Agent configuration"
+$S_LOG -d $S_NAME "Zabbix Agent 2 configuration"
 
 if [ -n "$1" ] && [ -n "$2" ]
 then
