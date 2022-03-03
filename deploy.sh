@@ -23,17 +23,12 @@ then
     $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent returned EXIT_CODE=$?"
 
     $S_DIR_PATH/ft-util/ft_util_pkg -u -i "zabbix-agent2" || exit 1
-fi
 
-if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2"
+elif $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2"
 then
     $S_LOG -d $S_NAME "Zabbix Agent 2 is already installed"
 
 else
-
-    #############################
-    ## GET CORRECT PACKAGE     ##
-    #############################
 
     # Overide for Raspberry Pi OS
     if cat /etc/os-release | grep 'raspbian' > /dev/null
@@ -43,6 +38,8 @@ else
         PKG_ZBX_URL="http://${PKG_REPO_URL}/pool/main/z/zabbix-release"
     fi
 
+
+    # Get correct package for Debian Version
     case $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) in
         9)  
             PKG_ZBX_NAME="${PKG_ZBX_NAME}_5.0-1+stretch_all.deb"
@@ -68,9 +65,7 @@ else
         $S_LOG -s $? -d $S_NAME "Download of ${PKG_ZBX_URL}/${PKG_ZBX_NAME} returned code $?"
     fi
 
-    #############################
-    ## REMOVE ZABBIX AGENT 2   ##
-    #############################
+    # Remove Zabbix Agent 2 (if was installed)
     $S_LOG -d $S_NAME "Removing Zabbix Agent 2"
 
     DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent* < /dev/null > /dev/null
@@ -79,20 +74,16 @@ else
     dpkg -r zabbix-release > /dev/null
     $S_LOG -s $? -d $S_NAME "dpkg -r zabbix-release"
 
-    #############################
-    ## INSTALL PACKAGES        ##
-    #############################
-
+    # Install packages
     dpkg -i ${PKG_ZBX_NAME} > /dev/null
     $S_LOG -s $? -d $S_NAME "DPKG of ${PKG_ZBX_NAME} returned code $?"
 
+    # Install Zabbix Agent 2
     $S_DIR_PATH/ft-util/ft_util_pkg -u -i "zabbix-agent2" || exit 1
 
 fi
 
-#############################
-## DEPLOY CONFIG FILE      ## 
-#############################
+# Deploy Config
 $S_LOG -d $S_NAME "Zabbix Agent 2 configuration"
 
 if [ -n "$1" ] && [ -n "$2" ]
@@ -112,6 +103,14 @@ fi
 
 if [ ! -d "${ZBX_CONF_D}" ] ; then mkdir -pv "${ZBX_CONF_D}" ; $S_LOG -s $? -d $S_NAME "Creating ${ZBX_CONF_D} returned EXIT_CODE=$?" ; fi
 
+# Migrating PSK config from Zabbix Agent to Zabbix Agent 2
+if [ -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk.conf" ]
+then
+    $S_LOG -s warn -d $S_NAME "Migrating PSK config to Zabbix Agent 2"
+    mv -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk.conf" "${ZBX_CONF_D}/ft-psk.conf"
+    mv -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk-userparam.conf" "${ZBX_CONF_D}/ft-psk-userparam.conf"
+fi
+
 
 mkdir -pv "/var/log/zabbix/" | $S_LOG -d "$S_NAME" -d "/var/log/zabbix/" -i
 chown zabbix:zabbix "/var/log/zabbix/" | $S_LOG -d "$S_NAME" -d "/var/log/zabbix/" -i
@@ -128,15 +127,11 @@ ControlSocket=/tmp/agent.sock
 Include=${ZBX_CONF_D}/*.conf" > ${ZBX_CONF}
 cat $ZBX_CONF | $S_LOG -d "$S_NAME" -d "$ZBX_CONF" -i 
 
-#############################
-## ENABLE ZABBIX SERVICE   ##
-#############################
+# Enable Zabbix Agent 2
 systemctl enable zabbix-agent2 &>/dev/null
 $S_LOG -s $? -d $S_NAME "systemctl enable zabbix-agent2 returned code $?" # for Debian 7 it will not work but the agent seems to install itself in /etc/rc2.d/
 
-#############################
-## RESTART ZABBIX SERVICE  ##
-#############################
+# Restart Zabbix Agent 2
 echo "systemctl restart zabbix-agent2" | at now + 1 min &>/dev/null ## restart zabbix agent with a delay
 $S_LOG -s $? -d "$S_NAME" "Scheduling Zabbix Agent Restart"
 
