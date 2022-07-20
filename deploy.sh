@@ -13,6 +13,8 @@ LOG_DEBUG=true
 
 $S_LOG -d $S_NAME "Start $S_NAME $*"
 
+if [ $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) -le 8 ] ; then $S_LOG -s warn -d $S_NAME "Version of Debian not supported by the script." ; exit 1 ; fi
+
 if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent"
 then
     $S_LOG -s warn -d $S_NAME "Zabbix Agent is already installed and need to be replaced by Zabbix Agent2"
@@ -41,9 +43,6 @@ else
 
     # Get correct package for Debian Version
     case $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) in
-        8)  
-            PKG_ZBX_NAME="${PKG_ZBX_NAME}_5.0-1+jessie_all.deb"
-            ;;
         9)  
             PKG_ZBX_NAME="${PKG_ZBX_NAME}_5.0-1+stretch_all.deb"
             ;;
