@@ -13,7 +13,7 @@ LOG_DEBUG=true
 
 $S_LOG -d $S_NAME "Start $S_NAME $*"
 
-if [ $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) -le 8 ] ; then $S_LOG -s warn -d $S_NAME "Version of Debian not supported by the script." ; exit 1 ; fi
+if [ $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) -le 8 ] ; then $S_LOG -s crit -d $S_NAME "Version of Debian not supported by the script." ; exit 1 ; fi
 
 if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent"
 then
