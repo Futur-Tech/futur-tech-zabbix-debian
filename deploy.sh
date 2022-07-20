@@ -41,6 +41,9 @@ else
 
     # Get correct package for Debian Version
     case $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) in
+        8)  
+            PKG_ZBX_NAME="${PKG_ZBX_NAME}_5.0-1+jessie_all.deb"
+            ;;
         9)  
             PKG_ZBX_NAME="${PKG_ZBX_NAME}_5.0-1+stretch_all.deb"
             ;;
