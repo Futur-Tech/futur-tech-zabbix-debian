@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source "$(dirname "$0")/ft-util/ft_util_inc_var"
+source "$(dirname "$0")/ft-util/ft_util_inc_func"
 source "$(dirname "$0")/ft-util/ft_util_inc_var"
 
 src_dir="/usr/local/src"
