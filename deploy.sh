@@ -7,78 +7,77 @@ src_dir="/usr/local/src"
 zbx_conf="/etc/zabbix/zabbix_agent2.conf"
 zbx_conf_d="/etc/zabbix/zabbix_agent2.d"
 
-LOG_DEBUG=true
+# Set the default package repository URL and Zabbix release version
+pkg_repo_url="repo.zabbix.com/zabbix/6.0/debian"
+zabbix_release_version="6.0-5"
 
 $S_LOG -d $S_NAME "Start $S_NAME $*"
 
-if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent"; then
-    $S_LOG -s warn -d $S_NAME "Zabbix Agent is already installed and need to be replaced by Zabbix Agent2"
-    $S_LOG -s warn -d $S_NAME "Removing zabbix-agent"
-
-    DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent </dev/null >/dev/null
-    $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent returned EXIT_CODE=$?"
-
-    $S_DIR_PATH/ft-util/ft_util_pkg -u -i "zabbix-agent2" || exit 1
-
-elif $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2"; then
+if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2"; then
     $S_LOG -d $S_NAME "Zabbix Agent 2 is already installed"
 
 else
+    if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent"; then
+        $S_LOG -s warn -d $S_NAME "Zabbix Agent is already installed and needs to be replaced by Zabbix Agent2"
+        $S_LOG -s warn -d $S_NAME "Removing zabbix-agent"
 
-    pkg_repo_url="repo.zabbix.com/zabbix/6.0/debian"
-    pkg_zbx_url="https://${pkg_repo_url}/pool/main/z/zabbix-release"
-    pkg_zbx_name="zabbix-release"
-
-    # Overide for Raspberry Pi OS
-    if cat /etc/os-release | grep 'raspbian' >/dev/null; then
-        $S_LOG -d $S_NAME "Raspberry Pi OS Detected"
-        pkg_repo_url="repo.zabbix.com/zabbix/6.0/raspbian"
-        pkg_zbx_url="http://${pkg_repo_url}/pool/main/z/zabbix-release"
+        DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent </dev/null >/dev/null
+        $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent returned EXIT_CODE=$?"
     fi
 
-    # Get correct package for Debian Version
-    case $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) in
-    9)
-        pkg_zbx_name="${pkg_zbx_name}_5.0-1+stretch_all.deb"
-        ;;
-    10)
-        pkg_zbx_name="${pkg_zbx_name}_5.0-1+buster_all.deb"
-        ;;
-    11)
-        pkg_zbx_name="${pkg_zbx_name}_5.0-1+bullseye_all.deb"
-        ;;
-    12)
-        pkg_zbx_name="${pkg_zbx_name}_5.0-1+bullseye_all.deb" # Temp until upgrade to Zabbix 6.0
-        ;;
-    *)
-        $S_LOG -s warn -d $S_NAME "Version of Debian not supported by the script."
-        exit 1
-        ;;
-    esac
+    run_cmd_log dpkg -r zabbix-release
 
-    cd $src_dir
-    if [ -e ${pkg_zbx_name} ]; then
-        $S_LOG -s $? -d $S_NAME "Package ${pkg_zbx_name} found in $src_dir"
+    # Get the Debian version number (major version)
+    debian_version=$(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version)
+
+    # Check if the Debian version is 12 or above
+    if [ "$debian_version" -ge 12 ]; then
+        $S_LOG -s warn -d $S_NAME "Debian version 12 or above detected. Skipping download of repo."
+        [ -e "/etc/apt/sources.list.d/zabbix.list" ] && run_cmd_log rm -f "/etc/apt/sources.list.d/zabbix.list"
+        [ -e "/etc/apt/sources.list.d/zabbix.list" ] && run_cmd_log rm -f "/etc/apt/sources.list.d/zabbix.list"
+
     else
-        run_cmd_log wget --quiet ${pkg_zbx_url}/${pkg_zbx_name}
+        # Override for Raspberry Pi OS
+        if grep -q 'raspbian' /etc/os-release; then
+            $S_LOG -d $S_NAME "Raspberry Pi OS Detected"
+            pkg_repo_url="repo.zabbix.com/zabbix/6.0/raspbian"
+        fi
+
+        # Map Debian release versions to corresponding Zabbix package names
+        declare -A pkg_zbx_name_map=(
+            [9]="zabbix-release_${zabbix_release_version}+debian9_all.deb"
+            [10]="zabbix-release_${zabbix_release_version}+debian10_all.deb"
+            [11]="zabbix-release_${zabbix_release_version}+debian11_all.deb"
+            [12]="zabbix-release_${zabbix_release_version}+debian11_all.deb" # Temp until upgrade to Zabbix 6.0
+        )
+
+        # Check if the Debian version is supported
+        if [ -z "${pkg_zbx_name_map[$debian_version]}" ]; then
+            echo "Version of Debian not supported by the script." >&2
+            exit 1
+        fi
+
+        # Construct the final package name
+        pkg_zbx_name="zabbix-release_${pkg_zbx_name_map[$debian_version]}"
+
+        cd $src_dir
+        if [ -e ${pkg_zbx_name} ]; then
+            $S_LOG -s $? -d $S_NAME "Package ${pkg_zbx_name} found in $src_dir"
+        else
+            run_cmd_log wget --quiet "${pkg_zbx_url}/${pkg_zbx_name}"
+        fi
+
+        # Install packages
+        run_cmd_log dpkg -i ${pkg_zbx_name}
     fi
 
     # Remove Zabbix Agent 2 (if was installed)
     $S_LOG -d $S_NAME "Removing Zabbix Agent 2"
-
     DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent* </dev/null >/dev/null
     $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent*"
 
-    dpkg -r zabbix-release >/dev/null
-    $S_LOG -s $? -d $S_NAME "dpkg -r zabbix-release"
-
-    # Install packages
-    dpkg -i ${pkg_zbx_name} >/dev/null
-    $S_LOG -s $? -d $S_NAME "DPKG of ${pkg_zbx_name} returned code $?"
-
     # Install Zabbix Agent 2
     $S_DIR_PATH/ft-util/ft_util_pkg -u -i "zabbix-agent2" || exit 1
-
 fi
 
 # Deploy Config
@@ -97,11 +96,7 @@ else
 fi
 
 [ ! -e "${zbx_conf}.origin" ] && cp "${zbx_conf}" "${zbx_conf}.origin"
-
-if [ ! -d "${zbx_conf_d}" ]; then
-    mkdir -pv "${zbx_conf_d}"
-    $S_LOG -s $? -d $S_NAME "Creating ${zbx_conf_d} returned EXIT_CODE=$?"
-fi
+[ ! -d "${zbx_conf_d}" ] && run_cmd_log mkdir -pv "${zbx_conf_d}"
 
 # Migrating PSK config from Zabbix Agent to Zabbix Agent 2
 if [ -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk.conf" ]; then
