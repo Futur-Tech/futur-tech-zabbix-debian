@@ -12,8 +12,21 @@ pkg_repo_url="repo.zabbix.com/zabbix/6.0/debian"
 zabbix_release_version="6.0-5"
 
 if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2"; then
-    $S_LOG -d $S_NAME "Zabbix Agent 2 is already installed"
+    installed_version=$(dpkg -l "zabbix-agent2" | awk '/^ii/{print $3}')
+    major_version_installed=$(echo "$installed_version" | awk -F '.' '{print $1}')
 
+    # Get the major version of the Zabbix release version
+    major_version_expected=$(echo "$zabbix_release_version" | awk -F '-' '{print $1}')
+
+    if [ "$major_version_installed" -eq "$major_version_expected" ]; then
+        $S_LOG -d $S_NAME "Zabbix Agent 2 is already installed and is on the same major version (${major_version_installed}) as the expected version (${major_version_expected})"
+    else
+        $S_LOG -s warn -d $S_NAME "Zabbix Agent 2 is already installed but is on a different major version (${major_version_installed}). It needs to be replaced by Zabbix Agent2 version ${zabbix_release_version}."
+        $S_LOG -s warn -d $S_NAME "Removing zabbix-agent2"
+
+        DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent2 </dev/null >/dev/null
+        $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent2 returned EXIT_CODE=$?"
+    fi
 else
     if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent"; then
         $S_LOG -s warn -d $S_NAME "Zabbix Agent is already installed and needs to be replaced by Zabbix Agent2"
@@ -30,14 +43,14 @@ else
 
     # Check if the Debian version is 12 or above
     if [ "$debian_version" -ge 12 ]; then
-        $S_LOG -s warn -d $S_NAME "Debian version 12 or above detected. Skipping download of repo."
+        $S_LOG -d $S_NAME "Debian version 12 or above detected. Skipping download of repo."
         [ -e "/etc/apt/sources.list.d/zabbix.list" ] && run_cmd_log rm -f "/etc/apt/sources.list.d/zabbix.list"
         [ -e "/etc/apt/sources.list.d/zabbix.list" ] && run_cmd_log rm -f "/etc/apt/sources.list.d/zabbix.list"
 
     else
         # Override for Raspberry Pi OS
         if grep -q 'raspbian' /etc/os-release; then
-            $S_LOG -d $S_NAME "Raspberry Pi OS Detected"
+            $S_LOG -s warn -d $S_NAME "Raspberry Pi OS Detected"
             pkg_repo_url="repo.zabbix.com/zabbix/6.0/raspbian"
         fi
 
@@ -46,7 +59,6 @@ else
             [9]="zabbix-release_${zabbix_release_version}+debian9_all.deb"
             [10]="zabbix-release_${zabbix_release_version}+debian10_all.deb"
             [11]="zabbix-release_${zabbix_release_version}+debian11_all.deb"
-            [12]="zabbix-release_${zabbix_release_version}+debian11_all.deb" # Temp until upgrade to Zabbix 6.0
         )
 
         # Check if the Debian version is supported
@@ -71,15 +83,12 @@ else
 
     # Remove Zabbix Agent 2 (if was installed)
     $S_LOG -d $S_NAME "Removing Zabbix Agent 2"
-    DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent* </dev/null >/dev/null
-    $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent*"
+    DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent2 </dev/null >/dev/null
+    $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent2"
 
     # Install Zabbix Agent 2
     $S_DIR_PATH/ft-util/ft_util_pkg -u -i "zabbix-agent2" || exit 1
 fi
-
-# Deploy Config
-$S_LOG -d $S_NAME "Zabbix Agent 2 configuration"
 
 if [ -n "$1" ] && [ -n "$2" ]; then
     ZBX_SRV_PASSIVE=$1
@@ -101,7 +110,7 @@ if [ -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk.conf" ]; then
     mv -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk-userparam.conf" "${zbx_conf_d}/ft-psk-userparam.conf"
 fi
 
-run_cmd_log mkdir -pv "/var/log/zabbix/"
+[ ! -d "/var/log/zabbix/" ] && run_cmd_log mkdir -pv "/var/log/zabbix/"
 run_cmd_log chown zabbix:zabbix "/var/log/zabbix/"
 
 # Add zabbix user to standard monitoring group https://wiki.debian.org/SystemGroups
