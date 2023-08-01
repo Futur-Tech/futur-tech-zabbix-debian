@@ -97,10 +97,10 @@ else
         run_cmd_log dpkg -i "${src_dir}/${pkg_zbx_name_map[$debian_version]}"
     fi
 
-    # Remove Zabbix Agent 2 (if was installed)
-    $S_LOG -d $S_NAME "Removing Zabbix Agent 2"
-    DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent2 </dev/null >/dev/null
-    $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent2"
+    # # Remove Zabbix Agent 2 (if was installed)
+    # $S_LOG -d $S_NAME "Removing Zabbix Agent 2"
+    # DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent2 </dev/null >/dev/null
+    # $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent2"
 
     # Install Zabbix Agent 2
     $S_DIR_PATH/ft-util/ft_util_pkg -u -i "zabbix-agent2" || exit 1
