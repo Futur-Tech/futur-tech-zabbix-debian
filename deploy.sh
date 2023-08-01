@@ -1,26 +1,18 @@
 #!/usr/bin/env bash
 
 source "$(dirname "$0")/ft-util/ft_util_inc_var"
+source "$(dirname "$0")/ft-util/ft_util_inc_var"
 
-SRC_DIR="/usr/local/src"
-PKG_REPO_URL="repo.zabbix.com/zabbix/5.0/debian"
-PKG_ZBX_URL="https://${PKG_REPO_URL}/pool/main/z/zabbix-release"
-PKG_ZBX_NAME="zabbix-release"
-ZBX_CONF="/etc/zabbix/zabbix_agent2.conf"
-ZBX_CONF_D="/etc/zabbix/zabbix_agent2.d"
+src_dir="/usr/local/src"
+zbx_conf="/etc/zabbix/zabbix_agent2.conf"
+zbx_conf_d="/etc/zabbix/zabbix_agent2.d"
 
 LOG_DEBUG=true
 
 $S_LOG -d $S_NAME "Start $S_NAME $*"
 
-if [ $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) -le 8 ]; then
-    $S_LOG -s crit -d $S_NAME "Version of Debian not supported by the script."
-    exit 1
-fi
-
 if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent"; then
     $S_LOG -s warn -d $S_NAME "Zabbix Agent is already installed and need to be replaced by Zabbix Agent2"
-
     $S_LOG -s warn -d $S_NAME "Removing zabbix-agent"
 
     DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent </dev/null >/dev/null
@@ -33,26 +25,30 @@ elif $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2"; then
 
 else
 
+    pkg_repo_url="repo.zabbix.com/zabbix/6.0/debian"
+    pkg_zbx_url="https://${pkg_repo_url}/pool/main/z/zabbix-release"
+    pkg_zbx_name="zabbix-release"
+
     # Overide for Raspberry Pi OS
     if cat /etc/os-release | grep 'raspbian' >/dev/null; then
         $S_LOG -d $S_NAME "Raspberry Pi OS Detected"
-        PKG_REPO_URL="repo.zabbix.com/zabbix/5.0/raspbian"
-        PKG_ZBX_URL="http://${PKG_REPO_URL}/pool/main/z/zabbix-release"
+        pkg_repo_url="repo.zabbix.com/zabbix/6.0/raspbian"
+        pkg_zbx_url="http://${pkg_repo_url}/pool/main/z/zabbix-release"
     fi
 
     # Get correct package for Debian Version
     case $(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version) in
     9)
-        PKG_ZBX_NAME="${PKG_ZBX_NAME}_5.0-1+stretch_all.deb"
+        pkg_zbx_name="${pkg_zbx_name}_5.0-1+stretch_all.deb"
         ;;
     10)
-        PKG_ZBX_NAME="${PKG_ZBX_NAME}_5.0-1+buster_all.deb"
+        pkg_zbx_name="${pkg_zbx_name}_5.0-1+buster_all.deb"
         ;;
     11)
-        PKG_ZBX_NAME="${PKG_ZBX_NAME}_5.0-1+bullseye_all.deb"
+        pkg_zbx_name="${pkg_zbx_name}_5.0-1+bullseye_all.deb"
         ;;
     12)
-        PKG_ZBX_NAME="${PKG_ZBX_NAME}_5.0-1+bullseye_all.deb" # Temp until upgrade to Zabbix 6.0
+        pkg_zbx_name="${pkg_zbx_name}_5.0-1+bullseye_all.deb" # Temp until upgrade to Zabbix 6.0
         ;;
     *)
         $S_LOG -s warn -d $S_NAME "Version of Debian not supported by the script."
@@ -60,12 +56,11 @@ else
         ;;
     esac
 
-    cd $SRC_DIR
-    if [ -e ${PKG_ZBX_NAME} ]; then
-        $S_LOG -s $? -d $S_NAME "Package ${PKG_ZBX_NAME} found in $SRC_DIR"
+    cd $src_dir
+    if [ -e ${pkg_zbx_name} ]; then
+        $S_LOG -s $? -d $S_NAME "Package ${pkg_zbx_name} found in $src_dir"
     else
-        wget --quiet ${PKG_ZBX_URL}/${PKG_ZBX_NAME}
-        $S_LOG -s $? -d $S_NAME "Download of ${PKG_ZBX_URL}/${PKG_ZBX_NAME} returned code $?"
+        run_cmd_log wget --quiet ${pkg_zbx_url}/${pkg_zbx_name}
     fi
 
     # Remove Zabbix Agent 2 (if was installed)
@@ -78,8 +73,8 @@ else
     $S_LOG -s $? -d $S_NAME "dpkg -r zabbix-release"
 
     # Install packages
-    dpkg -i ${PKG_ZBX_NAME} >/dev/null
-    $S_LOG -s $? -d $S_NAME "DPKG of ${PKG_ZBX_NAME} returned code $?"
+    dpkg -i ${pkg_zbx_name} >/dev/null
+    $S_LOG -s $? -d $S_NAME "DPKG of ${pkg_zbx_name} returned code $?"
 
     # Install Zabbix Agent 2
     $S_DIR_PATH/ft-util/ft_util_pkg -u -i "zabbix-agent2" || exit 1
@@ -93,36 +88,34 @@ if [ -n "$1" ] && [ -n "$2" ]; then
     ZBX_SRV_PASSIVE=$1
     ZBX_SRV_ACTIVE=$2
 else
-    source <(grep "Server" ${ZBX_CONF})
-    $S_LOG -s $? -d $S_NAME "Loaded ZBX_SRV_PASSIVE and ZBX_SRV_ACTIVE variable from ${ZBX_CONF}"
+    source <(grep "Server" ${zbx_conf})
+    $S_LOG -s $? -d $S_NAME "Loaded ZBX_SRV_PASSIVE and ZBX_SRV_ACTIVE variable from ${zbx_conf}"
     ZBX_SRV_PASSIVE="${Server}"
     ZBX_SRV_ACTIVE="${ServerActive}"
     $S_LOG -d $S_NAME "ZBX_SRV_PASSIVE=\"${ZBX_SRV_PASSIVE}\""
     $S_LOG -d $S_NAME "ZBX_SRV_ACTIVE=\"${ZBX_SRV_ACTIVE}\""
 fi
 
-[ ! -e "${ZBX_CONF}.origin" ] && cp "${ZBX_CONF}" "${ZBX_CONF}.origin"
+[ ! -e "${zbx_conf}.origin" ] && cp "${zbx_conf}" "${zbx_conf}.origin"
 
-if [ ! -d "${ZBX_CONF_D}" ]; then
-    mkdir -pv "${ZBX_CONF_D}"
-    $S_LOG -s $? -d $S_NAME "Creating ${ZBX_CONF_D} returned EXIT_CODE=$?"
+if [ ! -d "${zbx_conf_d}" ]; then
+    mkdir -pv "${zbx_conf_d}"
+    $S_LOG -s $? -d $S_NAME "Creating ${zbx_conf_d} returned EXIT_CODE=$?"
 fi
 
 # Migrating PSK config from Zabbix Agent to Zabbix Agent 2
 if [ -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk.conf" ]; then
     $S_LOG -s warn -d $S_NAME "Migrating PSK config to Zabbix Agent 2"
-    mv -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk.conf" "${ZBX_CONF_D}/ft-psk.conf"
-    mv -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk-userparam.conf" "${ZBX_CONF_D}/ft-psk-userparam.conf"
+    mv -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk.conf" "${zbx_conf_d}/ft-psk.conf"
+    mv -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk-userparam.conf" "${zbx_conf_d}/ft-psk-userparam.conf"
 fi
 
-mkdir -pv "/var/log/zabbix/" | $S_LOG -d "$S_NAME" -d "/var/log/zabbix/" -i
-chown zabbix:zabbix "/var/log/zabbix/" | $S_LOG -d "$S_NAME" -d "/var/log/zabbix/" -i
+run_cmd_log mkdir -pv "/var/log/zabbix/"
+run_cmd_log chown zabbix:zabbix "/var/log/zabbix/"
 
 # Add zabbix user to standard monitoring group https://wiki.debian.org/SystemGroups
-usermod --append --groups adm zabbix
-$S_LOG -s $? -d "$S_NAME" "add zabbix user to group adm"
-usermod --append --groups systemd-journal zabbix
-$S_LOG -s $? -d "$S_NAME" "add zabbix user to group systemd-journal"
+run_cmd_log usermod --append --groups adm zabbix
+run_cmd_log usermod --append --groups systemd-journal zabbix
 
 echo "# Generated by ${S_NAME}
 # $(date)
@@ -133,12 +126,11 @@ PidFile=/var/run/zabbix/zabbix_agent2.pid
 LogFile=/var/log/zabbix/zabbix_agent2.log
 LogFileSize=0
 ControlSocket=/tmp/agent.sock
-Include=${ZBX_CONF_D}/*.conf" >${ZBX_CONF}
-cat $ZBX_CONF | $S_LOG -d "$S_NAME" -d "$ZBX_CONF" -i
+Include=${zbx_conf_d}/*.conf" >${zbx_conf}
+cat $zbx_conf | $S_LOG -d "$S_NAME" -d "$zbx_conf" -i
 
 # Enable Zabbix Agent 2
-systemctl enable zabbix-agent2 &>/dev/null
-$S_LOG -s $? -d $S_NAME "systemctl enable zabbix-agent2 returned code $?" # for Debian 7 it will not work but the agent seems to install itself in /etc/rc2.d/
+run_cmd_log systemctl enable zabbix-agent2 &>/dev/null
 
 # Restart Zabbix Agent 2
 echo "systemctl restart zabbix-agent2" | at now + 1 min &>/dev/null ## restart zabbix agent with a delay
