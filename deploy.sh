@@ -15,8 +15,15 @@ if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2"; then
     installed_version=$(dpkg -l "zabbix-agent2" | awk '/^ii/{print $3}')
     major_version_installed=$(echo "$installed_version" | awk -F '.' '{print $1}')
 
+    # Debug statements to check variable values
+    echo "Installed Version: $installed_version"
+    echo "Major Version Installed: $major_version_installed"
+
     # Get the major version of the Zabbix release version
     major_version_expected=$(echo "$zabbix_release_version" | awk -F '-' '{print $1}')
+
+    # Debug statements to check variable values
+    echo "Expected Major Version: $major_version_expected"
 
     if [ "$major_version_installed" -eq "$major_version_expected" ]; then
         $S_LOG -d $S_NAME "Zabbix Agent 2 is already installed and is on the same major version (${major_version_installed}) as the expected version (${major_version_expected})"
