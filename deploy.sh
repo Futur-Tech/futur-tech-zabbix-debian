@@ -10,14 +10,14 @@ zbx_conf_d="/etc/zabbix/zabbix_agent2.d"
 # Set the default package repository URL and Zabbix release version
 zabbix_release_version="6.0"
 
-$S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2" && major_version_installed=$(zabbix_agent2 -V | grep -oP 'zabbix_agent2 \(Zabbix\) [0-9.]+' | awk '{print $3}')
+$S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2" && zabbix_version_installed=$(zabbix_agent2 -V | grep -oP 'zabbix_agent2 \(Zabbix\) [0-9.]+' | awk '{print $3}')
 
-if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2" && [ "$major_version_installed" -eq "$major_version_expected" ]; then
-    $S_LOG -d $S_NAME "Zabbix Agent 2 is already installed and is on version (${major_version_installed})"
+if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2" && [[ "$zabbix_version_installed" == "${zabbix_release_version}."* ]]; then
+    $S_LOG -d $S_NAME "Zabbix Agent 2 is already installed and is on version (${zabbix_version_installed})"
 
 else
     if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2"; then
-        $S_LOG -s warn -d $S_NAME "Zabbix Agent 2 is already installed but is on a different major version (${major_version_installed}). It needs to be replaced by Zabbix Agent2 version ${zabbix_release_version}."
+        $S_LOG -s warn -d $S_NAME "Zabbix Agent 2 is already installed but is on a different major version (${zabbix_version_installed}). It needs to be replaced by Zabbix Agent2 version ${zabbix_release_version}."
     fi
 
     if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent"; then
