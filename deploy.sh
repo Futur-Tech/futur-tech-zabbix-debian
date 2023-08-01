@@ -8,8 +8,7 @@ zbx_conf="/etc/zabbix/zabbix_agent2.conf"
 zbx_conf_d="/etc/zabbix/zabbix_agent2.d"
 
 # Set the default package repository URL and Zabbix release version
-pkg_repo_url="repo.zabbix.com/zabbix/6.0/debian"
-zabbix_release_version="6.0-5"
+zabbix_release_version="6.0"
 
 if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2"; then
     installed_version=$(dpkg -l "zabbix-agent2" | awk '/^ii/{print $3}')
@@ -55,27 +54,44 @@ else
         [ -e "/etc/apt/sources.list.d/zabbix.list" ] && run_cmd_log rm -f "/etc/apt/sources.list.d/zabbix.list"
 
     else
-        # Override for Raspberry Pi OS
-        if grep -q 'raspbian' /etc/os-release; then
-            $S_LOG -s warn -d $S_NAME "Raspberry Pi OS Detected"
-            pkg_repo_url="repo.zabbix.com/zabbix/6.0/raspbian"
-        fi
 
-        # Map Debian release versions to corresponding Zabbix package names
-        declare -A pkg_zbx_name_map=(
-            [9]="zabbix-release_${zabbix_release_version}+debian9_all.deb"
-            [10]="zabbix-release_${zabbix_release_version}+debian10_all.deb"
-            [11]="zabbix-release_${zabbix_release_version}+debian11_all.deb"
-        )
+        # Get the ID from /etc/os-release
+        source /etc/os-release
+        case "$ID" in
+        debian)
+            # Map Debian release versions to corresponding Zabbix package names
+            declare -A pkg_zbx_name_map=(
+                [9]="zabbix-release_latest+debian9_all.deb"
+                [10]="zabbix-release_latest+debian10_all.deb"
+                [11]="zabbix-release_latest+debian11_all.deb"
+            )
+            ;;
+
+        raspbian)
+            $S_LOG -s warn -d $S_NAME "Raspberry Pi OS Detected"
+
+            # Map Debian release versions to corresponding Zabbix package names
+            declare -A pkg_zbx_name_map=(
+                [9]="zabbix-release_${zabbix_release_version}-5+debian9_all.deb"
+                [10]="zabbix-release_${zabbix_release_version}-5+debian10_all.deb"
+                [11]="zabbix-release_${zabbix_release_version}-5+debian11_all.deb"
+            )
+            ;;
+
+        *)
+            $S_LOG -s crit -d $S_NAME "Unsupported OS: $ID"
+            exit 1
+            ;;
+        esac
 
         # Check if the Debian version is supported
         if [ -z "${pkg_zbx_name_map[$debian_version]}" ]; then
-            echo "Version of Debian not supported by the script." >&2
+            $S_LOG -s crit -d $S_NAME "Version of Debian not supported by the script."
             exit 1
         fi
 
         cd $src_dir
-        run_cmd_log wget --quiet "https://${pkg_repo_url}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$debian_version]}"
+        run_cmd_log wget --quiet "https://repo.zabbix.com/zabbix/6.0/${ID}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$debian_version]}"
 
         # Install packages
         run_cmd_log dpkg -i "${src_dir}/${pkg_zbx_name_map[$debian_version]}"
