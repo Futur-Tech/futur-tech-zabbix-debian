@@ -74,18 +74,11 @@ else
             exit 1
         fi
 
-        # Construct the final package name
-        pkg_zbx_name="zabbix-release_${pkg_zbx_name_map[$debian_version]}"
-
         cd $src_dir
-        if [ -e ${pkg_zbx_name} ]; then
-            $S_LOG -s $? -d $S_NAME "Package ${pkg_zbx_name} found in $src_dir"
-        else
-            run_cmd_log wget --quiet "https://${pkg_repo_url}/${pkg_zbx_name}"
-        fi
+        run_cmd_log wget --quiet "https://${pkg_repo_url}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$debian_version]}"
 
         # Install packages
-        run_cmd_log dpkg -i ${pkg_zbx_name}
+        run_cmd_log dpkg -i "${src_dir}/${pkg_zbx_name_map[$debian_version]}"
     fi
 
     # Remove Zabbix Agent 2 (if was installed)
