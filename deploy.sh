@@ -81,7 +81,7 @@ else
         if [ -e ${pkg_zbx_name} ]; then
             $S_LOG -s $? -d $S_NAME "Package ${pkg_zbx_name} found in $src_dir"
         else
-            run_cmd_log wget --quiet "${pkg_zbx_url}/${pkg_zbx_name}"
+            run_cmd_log wget --quiet "${pkg_repo_url}/${pkg_zbx_name}"
         fi
 
         # Install packages
