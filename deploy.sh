@@ -11,8 +11,6 @@ zbx_conf_d="/etc/zabbix/zabbix_agent2.d"
 pkg_repo_url="repo.zabbix.com/zabbix/6.0/debian"
 zabbix_release_version="6.0-5"
 
-$S_LOG -d $S_NAME "Start $S_NAME $*"
-
 if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2"; then
     $S_LOG -d $S_NAME "Zabbix Agent 2 is already installed"
 
@@ -128,5 +126,3 @@ run_cmd_log systemctl enable zabbix-agent2 &>/dev/null
 # Restart Zabbix Agent 2
 echo "systemctl restart zabbix-agent2" | at now + 1 min &>/dev/null ## restart zabbix agent with a delay
 $S_LOG -s $? -d "$S_NAME" "Scheduling Zabbix Agent Restart"
-
-$S_LOG -d "$S_NAME" "End $S_NAME"
