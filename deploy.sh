@@ -31,13 +31,15 @@ else
         $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent returned EXIT_CODE=$?"
     fi
 
-    run_cmd_log dpkg -r zabbix-release
+    [ -e "$zbx_conf"] && mv -f "$zbx_conf" "${zbx_conf}.bak"
 
     # Check if the Debian version is 12 or above
     if [ "$VERSION_ID" -ge 12 ]; then
         $S_LOG -d $S_NAME "Debian version 12 or above detected. Skipping download of repo."
 
     else
+        run_cmd_log dpkg -r zabbix-release
+
         case "$ID" in
         debian)
             # Map Debian release versions to corresponding Zabbix package names
@@ -120,6 +122,8 @@ LogFileSize=0
 ControlSocket=/tmp/agent.sock
 Include=${zbx_conf_d}/*.conf" >${zbx_conf}
 cat $zbx_conf | $S_LOG -d "$S_NAME" -d "$zbx_conf" -i
+
+show_bak_diff_rm $zbx_conf
 
 # Enable Zabbix Agent 2
 run_cmd_log systemctl enable zabbix-agent2 &>/dev/null
