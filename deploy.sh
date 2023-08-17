@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Get the OS data from /etc/os-release
+source /etc/os-release
+
 source "$(dirname "$0")/ft-util/ft_util_inc_func"
 source "$(dirname "$0")/ft-util/ft_util_inc_var"
 
@@ -30,19 +33,11 @@ else
 
     run_cmd_log dpkg -r zabbix-release
 
-    # Get the Debian version number (major version)
-    debian_version=$(sed -rn 's/([0-9]+)\.[0-9]+/\1/p' /etc/debian_version)
-
     # Check if the Debian version is 12 or above
-    if [ "$debian_version" -ge 12 ]; then
+    if [ "$VERSION_ID" -ge 12 ]; then
         $S_LOG -d $S_NAME "Debian version 12 or above detected. Skipping download of repo."
-        [ -e "/etc/apt/sources.list.d/zabbix.list" ] && run_cmd_log rm -f "/etc/apt/sources.list.d/zabbix.list"
-        [ -e "/etc/apt/sources.list.d/zabbix.list" ] && run_cmd_log rm -f "/etc/apt/sources.list.d/zabbix.list"
 
     else
-
-        # Get the ID from /etc/os-release
-        source /etc/os-release
         case "$ID" in
         debian)
             # Map Debian release versions to corresponding Zabbix package names
@@ -71,22 +66,17 @@ else
         esac
 
         # Check if the Debian version is supported
-        if [ -z "${pkg_zbx_name_map[$debian_version]}" ]; then
+        if [ -z "${pkg_zbx_name_map[$VERSION_ID]}" ]; then
             $S_LOG -s crit -d $S_NAME "Version of Debian not supported by the script."
             exit 1
         fi
 
         cd $src_dir
-        run_cmd_log wget --quiet "https://repo.zabbix.com/zabbix/6.0/${ID}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$debian_version]}"
+        run_cmd_log wget --quiet "https://repo.zabbix.com/zabbix/6.0/${ID}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$VERSION_ID]}"
 
         # Install packages
-        run_cmd_log dpkg -i "${src_dir}/${pkg_zbx_name_map[$debian_version]}"
+        run_cmd_log dpkg -i "${src_dir}/${pkg_zbx_name_map[$VERSION_ID]}"
     fi
-
-    # # Remove Zabbix Agent 2 (if was installed)
-    # $S_LOG -d $S_NAME "Removing Zabbix Agent 2"
-    # DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent2 </dev/null >/dev/null
-    # $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent2"
 
     # Install Zabbix Agent 2
     $S_DIR_PATH/ft-util/ft_util_pkg -u -i "zabbix-agent2" || exit 1
