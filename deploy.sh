@@ -31,7 +31,7 @@ else
         $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent returned EXIT_CODE=$?"
     fi
 
-    [ -e "$zbx_conf"] && mv -f "$zbx_conf" "${zbx_conf}.bak"
+    [ -e "$zbx_conf" ] && mv -f "$zbx_conf" "${zbx_conf}.bak"
 
     # Check if the Debian version is 12 or above
     if [ "$VERSION_ID" -ge 12 ]; then
