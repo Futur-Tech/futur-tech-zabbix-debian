@@ -31,12 +31,9 @@ else
         $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent returned EXIT_CODE=$?"
     fi
 
-    [ -e "$zbx_conf" ] && mv -f "$zbx_conf" "${zbx_conf}.bak"
-
     # Check if the Debian version is 12 or above
     if [ "$VERSION_ID" -ge 12 ]; then
         $S_LOG -d $S_NAME "Debian version 12 or above detected. Skipping download of repo."
-
     else
         run_cmd_log dpkg -r zabbix-release
 
@@ -95,7 +92,7 @@ else
 fi
 
 [ ! -e "${zbx_conf}.origin" ] && cp "${zbx_conf}" "${zbx_conf}.origin"
-[ ! -d "${zbx_conf_d}" ] && run_cmd_log mkdir -pv "${zbx_conf_d}"
+mkdir_if_missing "${zbx_conf_d}"
 
 # Migrating PSK config from Zabbix Agent to Zabbix Agent 2
 if [ -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk.conf" ]; then
@@ -104,7 +101,7 @@ if [ -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk.conf" ]; then
     mv -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk-userparam.conf" "${zbx_conf_d}/ft-psk-userparam.conf"
 fi
 
-[ ! -d "/var/log/zabbix/" ] && run_cmd_log mkdir -pv "/var/log/zabbix/"
+mkdir_if_missing "/var/log/zabbix/"
 run_cmd_log chown zabbix:zabbix "/var/log/zabbix/"
 
 # Add zabbix user to standard monitoring group https://wiki.debian.org/SystemGroups
