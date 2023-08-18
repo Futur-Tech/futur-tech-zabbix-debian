@@ -43,7 +43,7 @@ for pkg in "${pkg_arr[@]}"; do
             #     2> >($S_LOG -s err -d $S_NAME -d "apt-get" -d "$pkg" -i) > >($S_LOG -d $S_NAME -d "apt-get" -d "$pkg" -i)
 
             # https://peteris.rocks/blog/quiet-and-unattended-installation-with-apt-get/
-            DEBIAN_FRONTEND=noninteractive apt-get install -qq $pkg </dev/null >/dev/null
+            DEBIAN_FRONTEND=noninteractive apt-get -o DPkg::Options::=--force-confdef install -qq $pkg </dev/null >/dev/null
 
             if [ $? != "0" ]; then
                 $S_LOG -s crit -d $S_NAME -d "$pkg" "Failed to install needed packages ("$pkg"). Please fix it and re-run the script."
