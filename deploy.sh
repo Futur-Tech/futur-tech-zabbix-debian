@@ -91,8 +91,9 @@ else
     ZBX_SRV_ACTIVE="${ServerActive}"
 fi
 
-[ ! -e "${zbx_conf}.origin" ] && cp "${zbx_conf}" "${zbx_conf}.origin"
-mkdir_if_missing "${zbx_conf_d}"
+[ ! -e "$zbx_conf.origin" ] && cp $zbx_conf $zbx_conf.origin
+mkdir_if_missing $zbx_conf_d
+bak_if_exist $zbx_conf
 
 # Migrating PSK config from Zabbix Agent to Zabbix Agent 2
 if [ -f "/etc/zabbix/zabbix_agentd.conf.d/ft-psk.conf" ]; then
