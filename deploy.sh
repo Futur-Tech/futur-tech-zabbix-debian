@@ -118,7 +118,7 @@ LogFile=/var/log/zabbix/zabbix_agent2.log
 LogFileSize=0
 ControlSocket=/tmp/agent.sock
 Include=${zbx_conf_d}/*.conf" >${zbx_conf}
-cat $zbx_conf | $S_LOG -d "$S_NAME" -d "$zbx_conf" -i
+cat $zbx_conf | $S_LOG -s debug -d "$S_NAME" -d "$zbx_conf" -i
 
 show_bak_diff_rm $zbx_conf
 
