@@ -128,3 +128,5 @@ run_cmd_log systemctl enable zabbix-agent2 &>/dev/null
 # Restart Zabbix Agent 2
 echo "systemctl restart zabbix-agent2" | at now + 1 min &>/dev/null ## restart zabbix agent with a delay
 $S_LOG -s $? -d "$S_NAME" "Scheduling Zabbix Agent Restart"
+
+exit
