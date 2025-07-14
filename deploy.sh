@@ -69,7 +69,7 @@ else
     fi
 
     cd $src_dir
-    run_cmd_log wget --quiet "https://repo.zabbix.com/zabbix/6.0/${ID}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$VERSION_ID]}"
+    run_cmd_log wget --quiet "https://repo.zabbix.com/zabbix/${zabbix_release_version}/${ID}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$VERSION_ID]}"
 
     # Install packages
     run_cmd_log dpkg -i "${src_dir}/${pkg_zbx_name_map[$VERSION_ID]}"
