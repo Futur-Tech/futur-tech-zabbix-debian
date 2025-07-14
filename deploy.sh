@@ -84,13 +84,10 @@ else
     esac
 
     cd $src_dir
-    run_cmd_log wget --quiet "https://repo.zabbix.com/zabbix/${zabbix_release_version}/${ID}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$VERSION_ID]}"
-
-    # Install packages
-    run_cmd_log dpkg --install --force-confdef "${src_dir}/${pkg_zbx_name_map[$VERSION_ID]}"
-
-    # Install/upgrade Zabbix Agent 2
-    run_cmd_log apt-get install --yes zabbix-agent2
+    run_cmd_log wget --quiet "https://repo.zabbix.com/zabbix/${zabbix_release_version}/${ID}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$VERSION_ID]}" # Download zabbix-release package
+    run_cmd_log dpkg --install --force-confdef "${src_dir}/${pkg_zbx_name_map[$VERSION_ID]}"                                                              # Install zabbix-release package
+    $S_DIR_PATH/ft-util/ft_util_pkg -u                                                                                                                    # Update package list
+    run_cmd_log apt-get install --yes zabbix-agent2                                                                                                       # Install/upgradeZabbix Agent 2
 fi
 
 if [ -n "$1" ] && [ -n "$2" ]; then
