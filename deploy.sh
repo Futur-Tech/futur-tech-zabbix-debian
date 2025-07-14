@@ -13,13 +13,15 @@ zbx_conf_d="/etc/zabbix/zabbix_agent2.d"
 # Set the default package repository URL and Zabbix release version
 zabbix_release_version="6.0"
 
+zabbix_release_current_status=$(dpkg-query --status zabbix-release 2>/dev/null | awk -F': ' '/^Status:/ {print $2}')
+
 $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2" && zabbix_version_installed=$(zabbix_agent2 -V | grep -oP 'zabbix_agent2 \(Zabbix\) [0-9.]+' | awk '{print $3}')
 
-if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2" && [[ "$zabbix_version_installed" == "${zabbix_release_version}."* ]]; then
+if [[ "$zabbix_version_installed" == "${zabbix_release_version}."* ]] && [[ "$zabbix_release_current_status" == "install ok installed" ]]; then
     $S_LOG -d $S_NAME "Zabbix Agent 2 is already installed and is on version (${zabbix_version_installed})"
 
 else
-    if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2"; then
+    if $S_DIR_PATH/ft-util/ft_util_pkg "zabbix-agent2" && [[ "$zabbix_version_installed" != "${zabbix_release_version}."* ]]; then
         $S_LOG -s warn -d $S_NAME "Zabbix Agent 2 is already installed but is on a different major version (${zabbix_version_installed}). It needs to be replaced by Zabbix Agent2 version ${zabbix_release_version}."
     fi
 
@@ -30,9 +32,6 @@ else
         DEBIAN_FRONTEND=noninteractive apt-get remove -qq --purge zabbix-agent </dev/null >/dev/null
         $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent returned EXIT_CODE=$?"
     fi
-
-    # Remove previous Zabbix release if it exists
-    run_cmd_log dpkg -r zabbix-release
 
     case "$ID" in
     debian)
@@ -68,6 +67,21 @@ else
         $S_LOG -s crit -d $S_NAME "Version of Debian not supported by the script."
         exit 1
     fi
+
+    # Remove previous Zabbix release if it exists
+    case "$zabbix_release_current_status" in
+        "")        
+            $S_LOG -d $S_NAME "zabbix-release package not found. Proceeding with installation of zabbix-release package."
+            ;;
+        install ok installed)
+            $S_LOG -d $S_NAME "zabbix-release package status is [${zabbix_release_current_status}]. Proceeding with reinstallation."
+            run_cmd_log dpkg -r zabbix-release
+            ;;
+        *)             
+            $S_LOG -s warn -d $S_NAME "zabbix-release package status is [${zabbix_release_current_status}] (should be 'install ok installed'). Proceeding with reinstallation."
+            run_cmd_log dpkg -r zabbix-release
+            ;;
+    esac
 
     cd $src_dir
     run_cmd_log wget --quiet "https://repo.zabbix.com/zabbix/${zabbix_release_version}/${ID}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$VERSION_ID]}"
