@@ -11,7 +11,7 @@ zbx_conf="/etc/zabbix/zabbix_agent2.conf"
 zbx_conf_d="/etc/zabbix/zabbix_agent2.d"
 
 # Set the default package repository URL and Zabbix release version
-zabbix_release_version="6.0"
+zabbix_release_version="7.0"
 
 zabbix_release_current_status=$(dpkg-query --status zabbix-release 2>/dev/null | awk -F': ' '/^Status:/ {print $2}')
 
@@ -84,6 +84,7 @@ else
     esac
 
     cd $src_dir
+    run_cmd_log find ${src_dir} -type f -name \'zabbix-release_*.deb*\' -print -delete                                                                    # Delete previous zabbix-release package
     run_cmd_log wget --quiet "https://repo.zabbix.com/zabbix/${zabbix_release_version}/${ID}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$VERSION_ID]}" # Download zabbix-release package
     run_cmd_log dpkg --install --force-confdef "${src_dir}/${pkg_zbx_name_map[$VERSION_ID]}"                                                              # Install zabbix-release package
     $S_DIR_PATH/ft-util/ft_util_pkg -u                                                                                                                    # Update package list
