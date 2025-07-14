@@ -70,17 +70,17 @@ else
 
     # Remove previous Zabbix release if it exists
     case "$zabbix_release_current_status" in
-        "")        
-            $S_LOG -d $S_NAME "zabbix-release package not found. Proceeding with installation of zabbix-release package."
-            ;;
-        install ok installed)
-            $S_LOG -d $S_NAME "zabbix-release package status is [${zabbix_release_current_status}]. Proceeding with reinstallation."
-            run_cmd_log dpkg -r zabbix-release
-            ;;
-        *)             
-            $S_LOG -s warn -d $S_NAME "zabbix-release package status is [${zabbix_release_current_status}] (should be 'install ok installed'). Proceeding with reinstallation."
-            run_cmd_log dpkg -r zabbix-release
-            ;;
+    "")
+        $S_LOG -d $S_NAME "zabbix-release package not found. Proceeding with installation of zabbix-release package."
+        ;;
+    "install ok installed")
+        $S_LOG -d $S_NAME "zabbix-release package status is [${zabbix_release_current_status}]. Proceeding with reinstallation."
+        run_cmd_log dpkg -r zabbix-release
+        ;;
+    *)
+        $S_LOG -s warn -d $S_NAME "zabbix-release package status is [${zabbix_release_current_status}] (should be 'install ok installed'). Proceeding with reinstallation."
+        run_cmd_log dpkg -r zabbix-release
+        ;;
     esac
 
     cd $src_dir
