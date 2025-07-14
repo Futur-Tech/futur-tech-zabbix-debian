@@ -31,6 +31,7 @@ else
         $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent returned EXIT_CODE=$?"
     fi
 
+    # Remove previous Zabbix release if it exists
     run_cmd_log dpkg -r zabbix-release
 
     case "$ID" in
