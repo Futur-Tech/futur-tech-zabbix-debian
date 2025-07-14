@@ -89,8 +89,8 @@ else
     # Install packages
     run_cmd_log dpkg --install --force-confdef "${src_dir}/${pkg_zbx_name_map[$VERSION_ID]}"
 
-    # Install Zabbix Agent 2
-    $S_DIR_PATH/ft-util/ft_util_pkg -u -i "zabbix-agent2" || exit 1
+    # Install/upgrade Zabbix Agent 2
+    run_cmd_log apt-get install --yes zabbix-agent2
 fi
 
 if [ -n "$1" ] && [ -n "$2" ]; then
