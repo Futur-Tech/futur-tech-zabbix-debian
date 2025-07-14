@@ -75,11 +75,11 @@ else
         ;;
     "install ok installed")
         $S_LOG -d $S_NAME "zabbix-release package status is [${zabbix_release_current_status}]. Proceeding with reinstallation."
-        run_cmd_log dpkg -r zabbix-release
+        run_cmd_log dpkg --remove zabbix-release
         ;;
     *)
         $S_LOG -s warn -d $S_NAME "zabbix-release package status is [${zabbix_release_current_status}] (should be 'install ok installed'). Proceeding with reinstallation."
-        run_cmd_log dpkg -r zabbix-release
+        run_cmd_log dpkg --remove zabbix-release
         ;;
     esac
 
@@ -87,7 +87,7 @@ else
     run_cmd_log wget --quiet "https://repo.zabbix.com/zabbix/${zabbix_release_version}/${ID}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$VERSION_ID]}"
 
     # Install packages
-    run_cmd_log dpkg -i "${src_dir}/${pkg_zbx_name_map[$VERSION_ID]}"
+    run_cmd_log dpkg --install --force-confdef "${src_dir}/${pkg_zbx_name_map[$VERSION_ID]}"
 
     # Install Zabbix Agent 2
     $S_DIR_PATH/ft-util/ft_util_pkg -u -i "zabbix-agent2" || exit 1
