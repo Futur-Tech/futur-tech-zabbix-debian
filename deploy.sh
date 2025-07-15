@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-
-# Get the OS data from /etc/os-release
-source /etc/os-release
-
 source "$(dirname "$0")/ft-util/ft_util_inc_func"
 source "$(dirname "$0")/ft-util/ft_util_inc_var"
 
@@ -33,8 +29,23 @@ else
         $S_LOG -s $? -d $S_NAME "apt-get remove -qq --purge zabbix-agent returned EXIT_CODE=$?"
     fi
 
-    case "$ID" in
+    # Get the OS data from /etc/os-release
+    source /etc/os-release
+    os_id="$ID"
+    os_version_id="$VERSION_ID"
+    os_id_append=""
+
+    case "$os_id" in
     debian)
+        case "$(uname -m)" in
+        x86_64) os_id_append="" ;;
+        aarch64) os_id_append="-arm64" ;;
+        *)
+            $S_LOG -s crit -d $S_NAME "Unsupported Linux Architecture: $os_id $(uname -m)"
+            exit 1
+            ;;
+        esac
+
         # Map Debian release versions to corresponding Zabbix package names
         declare -A pkg_zbx_name_map=(
             [9]="zabbix-release_latest+debian9_all.deb"
@@ -47,23 +58,30 @@ else
     raspbian)
         $S_LOG -s warn -d $S_NAME "Raspberry Pi OS Detected"
 
+        case "$(uname -m)" in
+        aarch64) os_id_append="" ;;
+        *)
+            $S_LOG -s crit -d $S_NAME "Unsupported Linux Architecture: $os_id $(uname -m)"
+            exit 1
+            ;;
+        esac
+
         # Map Debian release versions to corresponding Zabbix package names
         declare -A pkg_zbx_name_map=(
             [9]="zabbix-release_${zabbix_release_version}-5+debian9_all.deb"
             [10]="zabbix-release_${zabbix_release_version}-5+debian10_all.deb"
             [11]="zabbix-release_${zabbix_release_version}-5+debian11_all.deb"
-            [12]="zabbix-release_${zabbix_release_version}-5+debian12_all.deb"
         )
         ;;
 
     *)
-        $S_LOG -s crit -d $S_NAME "Unsupported OS: $ID"
+        $S_LOG -s crit -d $S_NAME "Unsupported OS: $os_id"
         exit 1
         ;;
     esac
 
     # Check if the Debian version is supported
-    if [ -z "${pkg_zbx_name_map[$VERSION_ID]}" ]; then
+    if [ -z "${pkg_zbx_name_map[$os_version_id]}" ]; then
         $S_LOG -s crit -d $S_NAME "Version of Debian not supported by the script."
         exit 1
     fi
@@ -84,11 +102,11 @@ else
     esac
 
     cd $src_dir
-    run_cmd_log find ${src_dir} -type f -name \'zabbix-release_*.deb*\' -print -delete                                                                    # Delete previous zabbix-release package
-    run_cmd_log wget --quiet "https://repo.zabbix.com/zabbix/${zabbix_release_version}/${ID}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$VERSION_ID]}" # Download zabbix-release package
-    run_cmd_log dpkg --install --force-confdef "${src_dir}/${pkg_zbx_name_map[$VERSION_ID]}"                                                              # Install zabbix-release package
-    $S_DIR_PATH/ft-util/ft_util_pkg -u                                                                                                                    # Update package list
-    run_cmd_log apt-get install --quiet --yes -o Dpkg::Options::="--force-confold" zabbix-agent2                                                          # Install/upgrade Zabbix Agent 2
+    run_cmd_log find ${src_dir} -type f -name \'zabbix-release_*.deb*\' -print -delete                                                                                         # Delete previous zabbix-release package
+    run_cmd_log wget --quiet "https://repo.zabbix.com/zabbix/${zabbix_release_version}/${os_id}${os_id_append}/pool/main/z/zabbix-release/${pkg_zbx_name_map[$os_version_id]}" # Download zabbix-release package
+    run_cmd_log dpkg --install --force-confdef "${src_dir}/${pkg_zbx_name_map[$os_version_id]}"                                                                                # Install zabbix-release package
+    $S_DIR_PATH/ft-util/ft_util_pkg -u                                                                                                                                         # Update package list
+    run_cmd_log apt-get install --quiet --yes -o Dpkg::Options::="--force-confold" zabbix-agent2                                                                               # Install/upgrade Zabbix Agent 2
 fi
 
 if [ -n "$1" ] && [ -n "$2" ]; then
