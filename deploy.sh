@@ -143,8 +143,9 @@ Server=${ZBX_SRV_PASSIVE}
 ServerActive=${ZBX_SRV_ACTIVE}
 PidFile=/var/run/zabbix/zabbix_agent2.pid
 LogFile=/var/log/zabbix/zabbix_agent2.log
-LogFileSize=0
-ControlSocket=/tmp/agent.sock
+LogFileSize=8
+ControlSocket=/run/zabbix/agent.sock
+PluginSocket=/run/zabbix/agent.plugin.sock
 Include=${zbx_conf_d}/*.conf" >${zbx_conf}
 cat $zbx_conf | $S_LOG -s debug -d "$S_NAME" -d "$zbx_conf" -i
 
