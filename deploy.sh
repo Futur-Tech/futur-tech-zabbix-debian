@@ -52,6 +52,7 @@ else
             [10]="zabbix-release_latest+debian10_all.deb"
             [11]="zabbix-release_latest+debian11_all.deb"
             [12]="zabbix-release_latest+debian12_all.deb"
+            [13]="zabbix-release_latest+debian13_all.deb"
         )
         ;;
 
